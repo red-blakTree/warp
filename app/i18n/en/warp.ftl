@@ -163,6 +163,7 @@ workspace-toast-disabled-synchronized-inputs = Disabled all synchronized inputs.
 workspace-toast-conversation-deleted = Conversation deleted
 workspace-search-repos-placeholder = Search repos
 workspace-search-tabs-placeholder = Search tabs...
+terminal-onekey-search-placeholder = Search saved SSH credentials...
 workspace-rearrange-toolbar-items = Re-arrange toolbar items
 workspace-new-session-agent = Agent
 workspace-new-session-terminal = Terminal

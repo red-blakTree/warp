@@ -157,6 +157,7 @@ workspace-toast-upgrade-more-credits = 升级以获取更多额度。
 workspace-toast-disabled-synchronized-inputs = 已停用所有同步输入。
 workspace-toast-conversation-deleted = 对话已删除
 workspace-search-repos-placeholder = 搜索仓库
+terminal-onekey-search-placeholder = 搜索已保存的 SSH 凭据…
 workspace-search-tabs-placeholder = 搜索标签页...
 workspace-rearrange-toolbar-items = 重新排列工具栏项目
 workspace-new-session-agent = 智能体
