@@ -1079,12 +1079,19 @@ impl GlobalBufferModel {
                                 }
                             })
                             .collect();
-                        client.send_buffer_edit(
+                        // 投递失败说明连接已死,daemon 收不到这次编辑而本地
+                        // buffer 已推进 —— 标记为冲突,触发 UI 重新同步。
+                        if let Err(e) = client.send_buffer_edit(
                             path_for_edit.clone(),
                             expected_sv,
                             new_cv.as_u64(),
                             edits,
-                        );
+                        ) {
+                            log::error!(
+                                "Failed to send remote buffer edit for {path_for_edit}: {e}"
+                            );
+                            ctx.emit(GlobalBufferModelEvent::RemoteBufferConflict { file_id });
+                        }
                     }
                 });
             }

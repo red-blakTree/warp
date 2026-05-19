@@ -451,6 +451,14 @@ impl CodeView {
                     editor.with_selection_as_context(Box::new(get_context_target_terminal_view));
             }
 
+            // 远端 buffer 创建时内容为空,初始内容经 buffer-sync 协议异步到达。
+            // 加载窗口内若可编辑,用户输入会被 OpenBufferResponse 的 replace_all()
+            // 覆盖丢失 —— 先锁为 Selectable(可滚动/选择但不可编辑),待
+            // `FileLoaded` 到达后再恢复 Editable。
+            editor.editor().update(ctx, |code_editor, ctx| {
+                code_editor.set_interaction_state(InteractionState::Selectable, ctx);
+            });
+
             // 与本地 shared-buffer 编辑器一致:补上 footer / 保存冲突 UI。
             editor.add_footer(ctx);
             editor
@@ -547,6 +555,17 @@ impl CodeView {
         }
         ctx.subscribe_to_view(&code_editor, |me, emitter, event, ctx| match event {
             LocalCodeEditorEvent::FileLoaded => {
+                // 远端 buffer 初始内容到达后,解除加载期施加的编辑锁。
+                // 本地文件创建时即可编辑,从不被锁,这里也就是 no-op。
+                if let Some(tab) = me.tab_group.iter().find(|tab| tab.editor_view == emitter) {
+                    if matches!(tab.location, Some(BufferLocation::Remote(_))) {
+                        emitter.update(ctx, |local_editor, ctx| {
+                            local_editor.editor().update(ctx, |code_editor, ctx| {
+                                code_editor.set_interaction_state(InteractionState::Editable, ctx);
+                            });
+                        });
+                    }
+                }
                 me.pane_configuration.update(ctx, |pane_config, ctx| {
                     pane_config.refresh_pane_header_overflow_menu_items(ctx);
                 });

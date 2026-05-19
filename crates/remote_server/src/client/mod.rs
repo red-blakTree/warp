@@ -411,18 +411,18 @@ impl RemoteServerClient {
         }
     }
 
-    /// Sends a buffer edit notification (fire-and-forget) to the remote host.
+    /// Sends a buffer edit notification to the remote host.
     ///
-    // TODO(ssh-remote): `send_notification` 在 `outbound_tx` 关闭时只记日志,
-    // 此处会静默吞掉投递失败,本地 buffer 仍继续推进而 daemon 收不到编辑。
-    // 应改为返回 `Result` 或发失败事件,让 manager 把 buffer 标记为未同步。
+    /// OpenWarp:与其它 fire-and-forget 通知不同,buffer 编辑投递失败必须上报。
+    /// `outbound_tx` 关闭(连接已死)时若静默吞掉,本地 buffer 会继续推进而
+    /// daemon 收不到编辑,造成不可见的失步。失败返回 `Err` 让调用方处理。
     pub fn send_buffer_edit(
         &self,
         path: String,
         expected_server_version: u64,
         new_client_version: u64,
         edits: Vec<TextEdit>,
-    ) {
+    ) -> Result<(), ClientError> {
         let msg = ClientMessage {
             request_id: String::new(), // notification — no response expected
             message: Some(client_message::Message::BufferEdit(BufferEdit {
@@ -432,7 +432,10 @@ impl RemoteServerClient {
                 edits,
             })),
         };
-        self.send_notification(msg);
+        self.outbound_tx.try_send(msg).map_err(|e| {
+            log::error!("Failed to enqueue buffer edit: {e}");
+            ClientError::Disconnected
+        })
     }
 
     /// Tells the remote host to close a buffer (stop watching).
