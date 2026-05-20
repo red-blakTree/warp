@@ -8,7 +8,7 @@ Name=OpenWarp
 GenericName=TerminalEmulator
 
 Exec=warp-terminal-oss %U
-StartupWMClass=dev.openwarp.OpenWarp
+StartupWMClass=OpenWarp
 
 Keywords=shell;prompt;command;commandline;cmd;
 
